@@ -29,36 +29,37 @@
 
           <div class="stats">
             <span class="stat">♡ {{ post.recommendCount }}</span>
-            <span class="stat">💬 {{ comments.length }}</span>
+            <span class="stat">💬 {{ post.commentCount }}</span>
             <span class="stat">👁 {{ post.view }}</span>
           </div>
         </div>
       </div>
 
       <!-- 이미지 -->
-      <div class="image-section" v-if="post.files && post.files.length">
-        <swiper
-          :navigation="true"
-          :pagination="{ clickable: true }"
-          class="detail-swiper"
-        >
-          <swiper-slide
-            v-for="file in post.files"
-            :key="file.id"
-          >
-            <img
-              :src="`http://localhost:8000/post-service/adoption-post/image/${file.fileRename}`"
-              alt="post image"
-              class="post-image"
-            />
-          </swiper-slide>
-        </swiper>
+<div class="image-section" v-if="post.files && post.files.length">
+  <swiper
+    :navigation="true"
+    :pagination="{ clickable: true }"
+    class="detail-swiper"
+  >
+    <swiper-slide
+      v-for="file in post.files"
+      :key="file.id"
+    >
+      <img
+        :src="`http://localhost:8000/post-service/adoption-post/image/${file.fileRename}`"
+        alt="post image"
+        class="post-image"
+      />
+    </swiper-slide>
+  </swiper>
 
-        <!-- ▶ 페이지 번호 표시 -->
-        <div class="page-indicator">
-          {{ activeIndex + 1 }} / {{ post.files.length }}
-        </div>
-      </div>
+  <!-- ▶ 페이지 번호 표시 -->
+  <div class="page-indicator">
+    {{ activeIndex + 1 }} / {{ post.files.length }}
+  </div>
+</div>
+
 
       <!-- 🐾 동물 정보 -->
       <section class="animal-info">
@@ -133,18 +134,10 @@
       <!-- 본문 -->
       <div class="content-text">{{ post.content }}</div>
 
-      <!-- ✅ 버튼 (좋아요 토글 + 공유하기 모달) -->
+      <!-- 버튼 -->
       <div class="action-bar">
-        <button 
-          class="action-btn like" 
-          :class="{ 'liked': isLiked }"
-          @click="toggleLike"
-        >
-          {{ isLiked ? '♥' : '♡' }} 좋아요 {{ likeCount }}
-        </button>
-        <button class="action-btn share" @click="showShareModal = true">
-          🔗 공유하기
-        </button>
+        <button class="action-btn like">♡ 좋아요 {{ post.recommendCount }}</button>
+        <button class="action-btn share">🔗 공유하기</button>
       </div>
 
       <!-- 댓글 -->
@@ -158,8 +151,8 @@
         <div v-for="(c, i) in comments" :key="i" class="comment-item">
           <div class="comment-profile">👤</div>
           <div class="comment-content">
-            <div class="comment-author">{{ c.writerName }}</div>
-            <div class="comment-time">{{ formatDate(c.displayDate) }}</div>
+            <div class="comment-author">{{ c.writer }}</div>
+            <div class="comment-time">{{ formatDate(c.createdAt) }}</div>
             <p class="comment-message">{{ c.content }}</p>
             <button class="reply-link">💬 답글하기</button>
           </div>
@@ -172,128 +165,42 @@
       </section>
 
     </div>
-
-    <!-- ✅ 공유하기 모달 -->
-    <div v-if="showShareModal" class="modal-overlay" @click="showShareModal = false">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>댕냥센터 게시글 공유하기</h3>
-          <button class="modal-close" @click="showShareModal = false">✕</button>
-        </div>
-        
-        <p class="modal-description">
-          가족을 기다리는 댕냥이의 이야기를 함께 퍼뜨려주세요 :-)
-        </p>
-
-        <div class="url-box">
-          <input 
-            type="text" 
-            :value="shareUrl" 
-            readonly 
-            ref="urlInput"
-            class="url-input"
-          />
-          <button class="copy-icon-btn" @click="copyUrl">
-            📋
-          </button>
-        </div>
-
-        <button class="copy-btn" @click="copyUrl">링크 복사</button>
-        <button class="cancel-btn" @click="showShareModal = false">취소</button>
-
-        <!-- 복사 완료 알림 -->
-        <div v-if="showCopyAlert" class="copy-alert">
-          ✅ 링크가 복사되었습니다!
-        </div>
-      </div>
-    </div>
-
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+
+import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+
 
 const activeIndex = ref(0);
 
 function onSlideChange(swiper) {
   activeIndex.value = swiper.activeIndex;
 }
-
 const route = useRoute();
 const post = ref({});
 const comments = ref([]);
-
-// ✅ 좋아요 상태
-const isLiked = ref(false);
-const likeCount = ref(0);
-
-// ✅ 공유하기 모달
-const showShareModal = ref(false);
-const showCopyAlert = ref(false);
-
-// ✅ 공유 URL
-const shareUrl = computed(() => {
-  return `https://catdogshelter.com/adoption-post/${route.params.id}`;
-});
 
 onMounted(async () => {
   const res = await fetch(`http://localhost:8000/post-service/adoption-post/${route.params.id}`);
   const data = await res.json();
   
+  console.log('API Response:', data); // ✅ 디버깅: API 응답 확인
+  console.log('Comments from API:', data.comments); // ✅ 디버깅: 댓글 확인
+  
   post.value = data;
+  
+  // ✅ API에서 받아온 댓글 사용 (더미 데이터 제거)
   comments.value = data.comments || [];
-  likeCount.value = data.recommendCount || 0;
   
-  // TODO: 로그인한 사용자가 좋아요를 눌렀는지 확인하는 API 호출
-  // isLiked.value = await checkIfLiked(route.params.id);
+  // 더미 댓글 제거!
+  // comments.value = [
+  //   { writer: "부천 유기견 보호소", content: "좋은 가족 만나길 바랍니다!", createdAt: "2025-10-21 16:20" },
+  //   { writer: "강지은", content: "너무 귀여워요 🥰", createdAt: "2025-10-21 15:30" },
+  // ];
 });
-
-// ✅ 좋아요 토글
-async function toggleLike() {
-  // TODO: 로그인 체크
-  // if (!isLoggedIn) {
-  //   alert('로그인이 필요합니다.');
-  //   return;
-  // }
-
-  try {
-    if (isLiked.value) {
-      // 좋아요 취소 API 호출
-      // await fetch(`http://localhost:8000/post-service/adoption-post/${route.params.id}/like`, {
-      //   method: 'DELETE'
-      // });
-      isLiked.value = false;
-      likeCount.value--;
-    } else {
-      // 좋아요 추가 API 호출
-      // await fetch(`http://localhost:8000/post-service/adoption-post/${route.params.id}/like`, {
-      //   method: 'POST'
-      // });
-      isLiked.value = true;
-      likeCount.value++;
-    }
-  } catch (error) {
-    console.error('좋아요 처리 중 오류:', error);
-  }
-}
-
-// ✅ URL 복사
-function copyUrl() {
-  const input = document.createElement('input');
-  input.value = shareUrl.value;
-  document.body.appendChild(input);
-  input.select();
-  document.execCommand('copy');
-  document.body.removeChild(input);
-  
-  // 복사 완료 알림
-  showCopyAlert.value = true;
-  setTimeout(() => {
-    showCopyAlert.value = false;
-  }, 2000);
-}
 
 function getImage(name) {
   return name
@@ -502,6 +409,63 @@ function formatDate(dateString) {
   background: #fff;
 }
 
+
+/* 모바일 화면 조정 */
+@media (max-width: 768px) {
+  .post-image {
+    max-height: 350px;
+  }
+}
+
+
+.pet-image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.arrow-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.95);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #333;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.arrow-btn:hover {
+  background: #fff;
+}
+
+.arrow-btn.left {
+  left: 16px;
+}
+
+.arrow-btn.right {
+  right: 16px;
+}
+
+.page-indicator {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
 /* 동물 정보 */
 .animal-info {
   background: #fffbf5;
@@ -608,7 +572,7 @@ function formatDate(dateString) {
   white-space: pre-wrap;
 }
 
-/* ✅ 액션 버튼 */
+/* 액션 버튼 */
 .action-bar {
   display: flex;
   justify-content: center;
@@ -634,13 +598,6 @@ function formatDate(dateString) {
 .action-btn:hover {
   background: #fef9f3;
   border-color: #d4b896;
-}
-
-/* ✅ 좋아요 활성화 상태 */
-.action-btn.like.liked {
-  background: #ffe4e1;
-  border-color: #ff6b6b;
-  color: #ff6b6b;
 }
 
 /* 댓글 */
@@ -776,152 +733,6 @@ function formatDate(dateString) {
   background: #dcc5a3;
 }
 
-/* ✅ 공유하기 모달 */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: #fff;
-  border-radius: 16px;
-  padding: 32px;
-  width: 90%;
-  max-width: 440px;
-  position: relative;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.modal-header h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: #999;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-}
-
-.modal-close:hover {
-  color: #333;
-}
-
-.modal-description {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 24px;
-  line-height: 1.5;
-}
-
-.url-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  background: #f8f8f8;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 12px 16px;
-}
-
-.url-input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  font-size: 14px;
-  color: #333;
-  outline: none;
-}
-
-.copy-icon-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 0;
-}
-
-.copy-btn {
-  width: 100%;
-  background: #e8d5b7;
-  border: none;
-  padding: 14px;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #5a4628;
-  cursor: pointer;
-  margin-bottom: 10px;
-}
-
-.copy-btn:hover {
-  background: #dcc5a3;
-}
-
-.cancel-btn {
-  width: 100%;
-  background: #fff;
-  border: 1px solid #ddd;
-  padding: 14px;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 500;
-  color: #666;
-  cursor: pointer;
-}
-
-.cancel-btn:hover {
-  background: #f8f8f8;
-}
-
-/* ✅ 복사 완료 알림 */
-.copy-alert {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #4caf50;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
 @media (max-width: 768px) {
   .detail-box {
     padding: 30px 24px;
@@ -936,14 +747,72 @@ function formatDate(dateString) {
     align-items: flex-start;
     gap: 10px;
   }
-  
   .post-image {
-    max-height: 350px;
-  }
+  width: 100%;
+  max-height: 350px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+  margin-bottom: 12px;
+}
+.detail-swiper {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
 
-  .modal-content {
-    padding: 24px;
-    width: 95%;
-  }
+.post-image {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  display: block;
+}
+
+/* 화살표 버튼 스타일 */
+.swiper-button-prev,
+.swiper-button-next {
+  width: 42px;
+  height: 42px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 50%;
+  color: #333;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.swiper-button-prev:hover,
+.swiper-button-next:hover {
+  background: #fff;
+}
+
+/* 아래 인디케이터 */
+.page-indicator {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.detail-swiper {
+  display: flex;
+  justify-content: center;
+}
+
+.swiper-slide {
+  display: flex;
+  justify-content: center;
+}
+
+.post-image {
+  width: auto;
+  max-width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+}
+
 }
 </style>
