@@ -39,6 +39,19 @@ const SIGUNGU_LIST = [
   { id: 29, name: '청주시',   sidoId: 10 },
 ]
 
+const SIDO_LIST = [
+  { id: 1,  code: 11, name: '서울특별시' },
+  { id: 2,  code: 26, name: '부산광역시' },
+  { id: 3,  code: 27, name: '대구광역시' },
+  { id: 4,  code: 28, name: '인천광역시' },
+  { id: 5,  code: 29, name: '광주광역시' },
+  { id: 6,  code: 30, name: '대전광역시' },
+  { id: 7,  code: 31, name: '울산광역시' },
+  { id: 8,  code: 41, name: '경기도' },
+  { id: 9,  code: 42, name: '강원도' },
+  { id: 10, code: 43, name: '충청북도' },
+]
+
 const form = ref({
   name: '',
   username: '',
@@ -49,7 +62,8 @@ const form = ref({
   region: '',
   address: '',
   agree: false,
-  sigunguId: '',              
+  sigunguId: '',  
+  sidoId: '',            
   ratingId: DEFAULT_RATING_ID 
 })
 
@@ -137,15 +151,29 @@ const ok = await signup(payload)
         </div>
 
         <div class="row2">
-            <label class="field">
-                <span>시군구 *</span>
-                <select v-model="form.sigunguId" required>
-                <option value="" disabled>선택</option>
-                <option v-for="g in SIGUNGU_LIST" :key="g.id" :value="g.id">
-                    {{ g.name }}
-                </option>
-                </select>
-            </label>
+        <!-- 시/도 -->
+        <label class="field">
+          <span>시/도 *</span>
+          <select v-model="form.sidoId" required>
+            <option value="" disabled>선택</option>
+            <option v-for="s in SIDO_LIST" :key="s.id" :value="s.id">
+              {{ s.name }}
+            </option>
+          </select>
+        </label>
+
+        <!-- 시/군/구 (연동 없이 UI만) -->
+        <label class="field">
+          <span>시군구 *</span>
+          <select v-model="form.sigunguId" required :disabled="!form.sidoId">
+            <option value="" disabled>
+              {{ form.sidoId ? '선택' : '시/도를 먼저 선택' }}
+            </option>
+            <option v-for="g in SIGUNGU_LIST" :key="g.id" :value="g.id">
+              {{ g.name }}
+            </option>
+          </select>
+        </label>
 
             <!-- 등급은 고정값으로 보내므로 UI는 굳이 노출 안 함 -->
             <label class="field" style="display:none">
