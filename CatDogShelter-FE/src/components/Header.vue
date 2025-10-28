@@ -40,10 +40,7 @@
             
             <!-- 드롭다운 메뉴 -->
             <div class="dropdown-menu">
-              <RouterLink 
-                :to="userRole === 'shelter' ? '/shelter-head/mypage' : '/mypage'" 
-                class="dropdown-item"
-              >
+              <RouterLink :to="myPageTo" class="dropdown-item">
                 내 정보
               </RouterLink>
               <RouterLink to="/mypage/messages" class="dropdown-item">
@@ -65,21 +62,25 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { ref, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuth } from '@/views/auth/useAuth'
 
 const router = useRouter()
 const { authed, logout } = useAuth()
 
-// ✅ userRole을 reactive하게 관리
+// 로그인 상태에 따라 로컬 role을 반영 (초기/변경 모두)
 const userRole = ref(localStorage.getItem('userRole') || 'user')
+watch(authed, (v) => {
+  userRole.value = v ? (localStorage.getItem('userRole') || 'user') : 'user'
+})
 
-// ✅ localStorage 변경 감지
-watch(authed, (newValue) => {
-  if (newValue) {
-    userRole.value = localStorage.getItem('userRole') || 'user'
-  }
+// "내 정보" 버튼 목적지 계산 (관리자 → /admin, 보호소장 → /shelter-head/mypage, 일반 → /mypage)
+const myPageTo = computed(() => {
+  const role = (localStorage.getItem('role') || '').toUpperCase()
+  if (role === 'ADMIN') return '/admin'
+  if (role === 'SHELTER_HEAD' || userRole.value === 'shelter') return '/shelter-head/mypage'
+  return '/mypage'
 })
 
 function goLogin() {
@@ -88,6 +89,8 @@ function goLogin() {
 
 function doLogout() {
   logout()
+  localStorage.removeItem('role')
+  localStorage.removeItem('userRole')
   router.push({ name: 'home' })
 }
 </script>

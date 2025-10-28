@@ -1,6 +1,6 @@
 <template>
   <!-- 자식 라우트가 있으면 해당 컴포넌트 표시 -->
-  <router-view v-if="$route.name === 'VolunteerRecruitInsert'" />
+  <router-view v-if="isChildRoute" />
   
   <!-- 기본 마이페이지 표시 -->
   <div v-else class="shelter-mypage">
@@ -32,7 +32,10 @@
 
         <!-- 신청 내역 -->
         <div class="application-card">
-          <h3 class="section-title">신청 내역</h3>
+          <div class="card-section-header">
+            <h3 class="section-title">신청 내역</h3>
+            <button class="section-more-btn" @click="goToApplicants">더보기</button>
+          </div>
           <table class="application-table">
             <thead>
               <tr>
@@ -73,7 +76,10 @@
 
         <!-- 봉사시간 관리 -->
         <div class="volunteer-time-card">
-          <h3 class="section-title">봉사시간 관리</h3>
+          <div class="card-section-header">
+            <h3 class="section-title">봉사시간 관리</h3>
+            <button class="section-more-btn" @click="goToApplicants">더보기</button>
+          </div>
           <table class="time-table">
             <thead>
               <tr>
@@ -149,12 +155,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import Approve from '@/views/volunteer/shelterhead/Approve.vue'
 import db from '@/assets/data/db.json'
 
 const router = useRouter()
+const route = useRoute()
+
+const childRouteNames = ['VolunteerRecruitInsert', 'ShelterApplicants']
+const isChildRoute = computed(() => childRouteNames.includes(route.name ?? ''))
 
 const mypageData = db?.shelterHead?.mypage ?? {}
 
@@ -211,6 +221,9 @@ function goToPost(id) {
 }
 function goToMessages() {
   router.push('/shelter-head/messages')
+}
+function goToApplicants() {
+  router.push('/shelter-head/mypage/applicants')
 }
 function editProfile() {
   console.log('내 정보 수정')
@@ -390,11 +403,36 @@ function logout() {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
+.card-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
 .section-title {
   font-size: 1.1rem;
   font-weight: 700;
   color: #3d2f1f;
-  margin: 0 0 20px 0;
+  margin: 0;
+}
+
+.section-more-btn {
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid #e4d7c7;
+  background: #faf6ee;
+  color: #6b5744;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.section-more-btn:hover {
+  background: #f0e5d4;
+  border-color: #d8cbbb;
 }
 
 .application-table,

@@ -7,15 +7,7 @@ import LoginView from '@/views/auth/login/index.vue'
 import SignupUserView from '@/views/auth/signup/user/index.vue'
 import SignupShelterView from '@/views/auth/signup/shelter/index.vue'
 
-// ===== User MyPage =====
-import UserMyPageView from '@/views/mypage/UserMyPageView.vue'
-import UserEdit from '@/views/mypage/UserEdit.vue'
-import UserMessages from '@/views/mypage/UserMessages.vue'
-
-// ===== Shelter Head MyPage =====
-import ShelterheadMypageView from '@/views/volunteer/shelterhead/ShelterheadMypageView.vue'
-
-// ===== Main Boards =====
+// ===== Main pages =====
 import HomeView from '@/views/HomeView.vue'
 import VolunteerView from '@/views/volunteer/VolunteerView.vue'
 import DonationView from '@/views/DonationView.vue'
@@ -29,7 +21,7 @@ import PostDetailView from '@/views/Post/PostDetailView.vue'
 import PostWriteView from '@/views/Post/PostWriteView.vue'
 import HeroesrankingView from '@/views/heros/HeroesrankingView.vue'
 
-// ===== Footer =====
+// ===== Footer pages =====
 import AboutView from '@/views/footer/AboutView.vue'
 import TermsView from '@/views/footer/TermsView.vue'
 import PrivacyView from '@/views/footer/PrivacyView.vue'
@@ -37,34 +29,212 @@ import CommunityGuideView from '@/views/footer/CommunityGuideView.vue'
 import AdoptionProcessView from '@/views/footer/AdoptionProcessView.vue'
 import VolunteerGuideView from '@/views/footer/VolunteerGuideView.vue'
 import FaqView from '@/views/footer/FaqView.vue'
+import AdminPageView from '@/views/AdminPageView.vue'
 
-// ===== Missing Write =====
+// ===== Misc views =====
+import ShelterheadMypageView from '@/views/volunteer/shelterhead/ShelterheadMypageView.vue'
+import ApplicantsView from '@/views/volunteer/shelterhead/Applicants.vue'
+import LoginPlaceholderView from '@/views/LoginPlaceholderView.vue'
+
+// ===== Missing post writer =====
 import MissingPostWirte from '@/views/missing/MissingPostWirte.vue'
+
+// ===== User MyPage =====
+import UserMyPageView from '@/views/mypage/UserMyPageView.vue'
+import UserEdit from '@/views/mypage/UserEdit.vue'
+import UserMessages from '@/views/mypage/UserMessages.vue'
 
 const router = createRouter({
   history: createWebHistory(),
 
   routes: [
-    { path: '/', name: 'home', component: HomeView },
-
+    // Home
+    {
+      path: '/',
+      name: 'home',
+      component: HomeView,
+    },
+    // Auth
     { path: '/login', name: 'login', component: LoginView },
     { path: '/signup', name: 'signup.user', component: SignupUserView },
     { path: '/signup/shelter', name: 'signup.shelter', component: SignupShelterView },
+    { path: '/_signup', redirect: { name: 'signup.user' } },   // legacy path cleanup
 
+    // Volunteer board (list layout)
+    {
+      path: '/volunteer',
+      component: VolunteerView,
+      children: [
+        {
+          // Volunteer recruiting detail
+          path: 'detail/:id',
+          name: 'VolunteerDetail',
+          component: () =>
+            import('@/views/volunteer/recruit/VolunteerDetailView.vue'),
+          props: true,
+        },
+        {
+          // Volunteer review detail
+          path: 'review/:id',
+          name: 'VolunteerReviewDetail',
+          component: () =>
+            import('@/views/volunteer/review/VolunteerReviewDetailView.vue'),
+          props: true,
+        },
+        {
+          // Volunteer review write
+          path: 'review/insert',
+          name: 'VolunteerReviewInsert',
+          component: () =>
+            import('@/views/volunteer/review/VolunteerReviewInsertView.vue'),
+        },
+      ],
+    },
+
+    // Donation board list
+    {
+      path: '/donation',
+      name: 'donation',
+      component: DonationView,
+    },
+
+    // Donation detail
+    {
+      path: '/donation/:id',
+      name: 'donation-detail',
+      component: DonationDetailView,
+      props: true,
+    },
+
+    // Adoption board list
+    {
+      path: '/adoption',
+      name: 'adoption',
+      component: AdoptionView,
+    },
+
+    // Adoption detail
+    {
+      path: '/adoption-post/:id',
+      name: 'adoptionDetail',
+      component: () =>
+        import('@/views/adoption/AdoptionDetail.vue'),
+      props: true,
+    },
+
+    // Adoption write
+    {
+      path: '/adoption/write',
+      name: 'AdoptionWrite',
+      component: () =>
+        import('@/views/adoption/AdoptionWrite.vue'),
+    },
+
+    // Missing board list
+    {
+      path: '/missing',
+      name: 'missing',
+      component: MissingView,
+    },
+    {
+      path: '/missing/:postId',
+      name: 'missing-detail',
+      component: MissingDetailView,
+      props: true, // allow route param(postId) as prop
+    },
+
+    // Missing report write
+    {
+      path: '/missing/write',
+      name: 'missing.write',
+      component: MissingPostWirte,
+    },
+
+    // Sighting board list
+    {
+      path: '/sighting',
+      name: 'sighting',
+      component: SightingView,
+    },
+
+    // Community board list
+    {
+      path: '/post',
+      name: 'post',
+      component: PostView,
+    },
+
+    // Community board write
+    {
+      path: '/post/write',
+      name: 'post.write',
+      component: PostWriteView,
+    },
+
+    // Community board detail
+    {
+      path: '/post/:id',
+      name: 'post.detail',
+      component: PostDetailView,
+      props: true,
+    },
+
+    // Redirect if someone hits /post.write directly
+    {
+      path: '/post.write',
+      redirect: { name: 'post.write' },
+    },
+
+    // Heroes
+    {
+      path: '/heroes',
+      name: 'heroes',
+      component: HeroesrankingView,
+    },
+
+    // footer / policy / guide pages
+    {
+      path: '/about',
+      component: AboutView,
+    },
+    {
+      path: '/terms',
+      component: TermsView,
+    },
+    {
+      path: '/privacy',
+      component: PrivacyView,
+    },
+    {
+      path: '/community-guide',
+      component: CommunityGuideView,
+    },
+    {
+      path: '/adoption-process',
+      component: AdoptionProcessView,
+    },
+    {
+      path: '/volunteer-guide',
+      component: VolunteerGuideView,
+    },
+    {
+      path: '/faq',
+      component: FaqView,
+    },
+    
     // ✅ User MyPage
-  {
-  path: '/mypage',
-  component: UserMyPageView,
-  beforeEnter: (to, from, next) => {
-    const { isAuthed } = useAuth()
-    if (!isAuthed.value) {
-      alert("로그인이 필요합니다.")
-      return next('/login')
-    }
-    next()
-  }
-}
-,
+    {
+      path: '/mypage',
+      component: UserMyPageView,
+      beforeEnter: (to, from, next) => {
+        const { isAuthed } = useAuth()
+        if (!isAuthed.value) {
+          alert("로그인이 필요합니다.")
+          return next('/login')
+        }
+        next()
+      }
+    },
     {
       path: '/mypage/edit',
       name: 'mypage-edit',
@@ -78,51 +248,44 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
 
-    // ✅ Shelter MyPage
+    // // ✅ Shelter MyPage
+    // {
+    //   path: '/shelter-head/mypage',
+    //   name: 'shelter-mypage',
+    //   component: ShelterheadMypageView,
+    //   meta: { requiresAuth: true, role: 'shelter' }
+    // },
+
+    // shelter head mypage
     {
       path: '/shelter-head/mypage',
-      name: 'shelter-mypage',
       component: ShelterheadMypageView,
-      meta: { requiresAuth: true, role: 'shelter' }
+      children: [
+        {
+          path: 'recruitinsert',
+          name: 'VolunteerRecruitInsert',
+          component: () =>
+            import('@/views/volunteer/recruit/VolunteerRecruitInsertView.vue'),
+        },
+        {
+          path: 'applicants',
+          name: 'ShelterApplicants',
+          component: ApplicantsView,
+        },
+      ],
     },
 
-    { path: '/volunteer', name: 'volunteer', component: VolunteerView },
-    {
-      path: '/donation/:id', name: 'donation-detail',
-      component: DonationDetailView, props: true,
-    },
-    { path: '/donation', name: 'donation', component: DonationView },
+    // src/router/index.js
+    { path: '/auth/find-id', name: 'find.id', component: () => import('@/views/auth/findIdView.vue') },
 
-    { path: '/adoption', name: 'adoption', component: AdoptionView },
-    {
-      path: '/adoption-post/:id',
-      name: 'adoptionDetail',
-      component: () => import('@/views/adoption/AdoptionDetail.vue'),
-      props: true,
-    },
-    {
-      path: '/adoption/write',
-      name: 'AdoptionWrite',
-      component: () => import('@/views/adoption/AdoptionWrite.vue'),
-      meta: { requiresAuth: true } // ✅ 보호소장만 제한하고 싶으면 role:'shelter'
-    },
+    
 
-    { path: '/missing', name: 'missing', component: MissingView },
-    { path: '/missing/write', name: 'missing.write', component: MissingPostWirte },
-
-    { path: '/sighting', name: 'sighting', component: SightingView },
-
+    // ===== duplicated routes (kept to match existing structure) =====
     { path: '/post', name: 'post', component: PostView },
-    { path: '/post/write', name: 'post.write', component: PostWriteView, meta: { requiresAuth: true } },
-    {
-      path: '/post/:id',
-      name: 'post.detail',
-      component: PostDetailView,
-      props: true,
-    },
+    { path: '/post/write', name: 'post.write', component: PostWriteView },
+    { path: '/post/:id', name: 'post.detail', component: PostDetailView, props: true },
 
-    { path: '/heroes', name: 'heroes', component: HeroesrankingView },
-
+    { path: '/post.write', redirect: { name: 'post.write' } },
     { path: '/about', component: AboutView },
     { path: '/terms', component: TermsView },
     { path: '/privacy', component: PrivacyView },
@@ -131,47 +294,35 @@ const router = createRouter({
     { path: '/volunteer-guide', component: VolunteerGuideView },
     { path: '/faq', component: FaqView },
 
+    {
+      path: '/shelter-head/mypage',
+      component: ShelterheadMypageView,
+      children: [
+        {
+          path: 'recruitinsert',
+          name: 'VolunteerRecruitInsert',
+          component: () => import('@/views/volunteer/recruit/VolunteerRecruitInsertView.vue')
+        },
+        {
+          path: 'applicants',
+          name: 'ShelterApplicants',
+          component: ApplicantsView,
+        }
+      ]
+    },
+
+  //   // login test screen (kept for reference)
+  //   {
+  //     path: '/login',
+  //     name: 'login',
+  //     component: LoginPlaceholderView,
+  //   },
+  // ],
+    // 404 → home
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
-
+  // always scroll to top on route change
   scrollBehavior: () => ({ top: 0 }),
-})
-
-
-router.beforeEach(async (to) => {
-  const { authed, fetchMe } = useAuth()
-  const storedAuth = localStorage.getItem('authed') === '1'
-  const userRole = localStorage.getItem('userRole')
-
-  // 1) 로그인 필요 페이지
-  if (to.meta.requiresAuth) {
-
-    // ✅ authed 또는 localStorage 중 하나만 true면 통과
-    if (!authed.value && !storedAuth) {
-      return {
-        name: 'login',
-        query: { next: to.fullPath }
-      }
-    }
-
-    // ✅ fetchMe는 에러 무시하고 추가 검증
-    try {
-      await fetchMe()
-    } catch (_) {
-      return {
-        name: 'login',
-        query: { next: to.fullPath }
-      }
-    }
-  }
-
-  // 2) 권한 확인
-  if (to.meta.role && to.meta.role !== userRole) {
-    alert('접근 권한이 없습니다.')
-    return { name: 'home' }
-  }
-
-  return true
 })
 
 export default router

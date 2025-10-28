@@ -7,10 +7,9 @@ const role = ref('USER') // 'USER' | 'SHELTER_HEAD'
 const form = ref({ email: '', password: '' })
 const keep = ref(false)
 
-const { loading, error } = useAuth()
+const { loading, error, authed } = useAuth()
 const router = useRouter()
 const hasSignup = computed(() => router.hasRoute('signup')) 
-
 
 const roleLabel = computed(() => role.value === 'USER' ? '일반회원' : '보호소장 회원')
 const signupRoute = computed(() =>
@@ -25,12 +24,33 @@ const signupHint = computed(() =>
     : '보호소장님, 안냥보호센터와 함께해요. 보호소장 전용 회원가입으로 진행됩니다.'
 )
 
+/** ✅ 임시 관리자 우회 로그인 추가 */
 const submit = async () => {
+  // 1) 임시 관리자 계정이면 백엔드 호출 없이 바로 통과
+  if (form.value.email === 'admin' && form.value.password === 'Admin!2025demo') {
+    authed.value = true
+    // 로그인 상태 플래그
+    localStorage.setItem('authed', '1')
+    // 라우터 가드/헤더 분기용 역할 값
+    localStorage.setItem('role', 'ADMIN')        // router.beforeEach에서 사용
+    localStorage.setItem('userRole', 'admin')     // 헤더 드롭다운 분기용(있으면)
+    // 필요하면 더미 유저 정보 저장
+    localStorage.setItem('user', JSON.stringify({
+      account: 'admin',
+      name: '관리자',
+    }))
+    // 그냥 홈으로 (헤더의 “내 정보”는 /admin으로 향함)
+    await router.push({ name: 'home' })
+    return
+  }
+
+  // 2) 일반 로그인 플로우
   const ok = await login({ ...form.value, role: role.value, keep: keep.value })
   if (ok) {
-    router.push({ name: 'home' }) // ✅ 원하는 페이지 이름으로
+    router.push({ name: 'home' })
   }
 }
+
 const emit = defineEmits(['success'])
 </script>
 
@@ -70,7 +90,7 @@ const emit = defineEmits(['success'])
           type="text"
           autocomplete="username"
           required
-          placeholder="아이디 또는 이메일을 입력하세요"
+          placeholder="아이디를 입력하세요"
         />
       </label>
 
@@ -104,20 +124,35 @@ const emit = defineEmits(['success'])
       {{ signupHint }}
     </p>
     <div class="links">
+      <!-- 회원가입 -->
       <router-link :to="signupRoute" class="link main">{{ signupLabel }}</router-link>
-      <span class="dot">·</span>
-      <router-link v-if="$router.hasRoute && $router.hasRoute('find.id')" :to="{ name:'find.id' }" class="link">아이디 찾기</router-link>
-      <span v-if="$router.hasRoute && $router.hasRoute('find.id')" class="dot">·</span>
-      <router-link v-if="$router.hasRoute && $router.hasRoute('find.password')" :to="{ name:'find.password' }" class="link">비밀번호 찾기</router-link>
+
+      <!-- 아이디 / 비밀번호 찾기 (한 줄) -->
+      <p class="find-links">
+        <router-link
+          v-if="router.hasRoute && router.hasRoute('find.id')"
+          :to="{ name:'find.id' }"
+          class="link"
+        >아이디</router-link>
+        <span class="sep"> / </span>
+        <router-link
+          v-if="router.hasRoute
+                && (router.hasRoute('find.password.request') || router.hasRoute('find.password'))"
+          :to="router.hasRoute('find.password.request')
+                ? { name:'find.password.request' }
+                : { name:'find.password' }"
+          class="link"
+        >비밀번호 찾기</router-link>
+      </p>
     </div>
   </section>
 </template>
 
 <style scoped>
 .card {
-  --card-w: 520px;           /* ✅ 통일 폭 */
-  --gutter: 24px;            /* ✅ 좌우 패딩 */
-  --ctl-h: 42px;             /* ✅ 인풋/셀렉트 높이 */
+  --card-w: 520px;
+  --gutter: 24px;
+  --ctl-h: 42px;
   width: var(--card-w);
   max-width: 92vw;
   background: #fff;
@@ -145,7 +180,7 @@ const emit = defineEmits(['success'])
 input[type="text"], input[type="password"] {
   width: 100%; height: var(--ctl-h);
   padding: 0 14px;
-  border: 1px solid #e1e1e1;   /* ✅ 오타 수정 */
+  border: 1px solid #e1e1e1;
   border-radius: 8px;
   background: #fafafa;
   outline: none;
