@@ -149,6 +149,7 @@ const emit = defineEmits(['success'])
       {{ signupHint }}
     </p>
     
+
     <!-- 테스트 계정 안내 -->
     <!-- <div v-if="role === 'SHELTER_HEAD'" class="test-info">
       💡 보호소장 테스트: shelter / Shelter!2025

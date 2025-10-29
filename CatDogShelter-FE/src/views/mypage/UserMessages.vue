@@ -11,7 +11,7 @@
           </pre>
         </div>
         <h3 class="username">이지윤</h3>
-        <span class="badge">1일차 쪽집게</span>
+        <span class="badge">댕냥 보호천사</span>
         
         <div class="profile-divider"></div>
 
@@ -45,7 +45,7 @@
           @click="currentTab = 'trash'"
         >
           <span class="icon">🗑️</span>
-          <span>쪽지통</span>
+          <span>휴지통</span>
           <span class="count">{{ trashedMessages.length }}</span>
         </div>
       </div>
@@ -204,7 +204,7 @@
       <!-- 휴지통 -->
       <div v-if="currentTab === 'trash'" class="tab-content">
         <div class="content-header">
-          <h2>쪽지통</h2>
+          <h2>휴지통</h2>
           <p class="subtitle">삭제된 쪽지는 30일 후 자동 삭제됩니다</p>
         </div>
 

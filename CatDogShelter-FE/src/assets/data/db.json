@@ -245,16 +245,16 @@
       ]
     },
     {
-      "id": "7fc2",
-      "companyName": "ㄴㅇ",
-      "title": "ㅇㄴ",
-      "content": "ㅇㄴ",
+      "id": "1bea",
+      "companyName": "3",
+      "title": "f",
+      "content": "f",
       "numberOfPeople": "2",
       "time": "3",
-      "startcreatedAt": "2025-10-22",
-      "sido": "경기도",
-      "sigungu": "고양시",
-      "detailAddress": "경기도 고양시 ㄴㅇ",
+      "startcreatedAt": "2025-11-08",
+      "sido": "부산광역시",
+      "sigungu": "동구",
+      "detailAddress": "부산광역시 동구 3",
       "deadline": "모집중",
       "deadlineClass": "recruiting",
       "createdAt": "2025-10-28",
@@ -1634,11 +1634,11 @@
   "shelterHead": {
     "mypage": {
       "shelterInfo": {
-        "name": "이지윤",
-        "email": "dain0404@gmail.com",
+        "name": "김영희",
+        "email": "youngpoti@gmail.com",
         "phone": "010-2244-4422",
-        "location": "경기도 부천시",
-        "joinDate": "2025-01-19"
+        "location": "서울특별시 종로구",
+        "joinDate": "2025-07-14"
       },
       "stats": {
         "recruitments": 8,
@@ -1745,7 +1745,7 @@
     "user": {
       "profileAscii": "⋆｡⋆✩°｡⋆｡✧ ░(๑˃̵ᴗ˂̵)و ░ ✧｡⋆｡✩°⋆｡",
       "profileEmoji": "(=^･ω･^=)♡",
-      "badgeLabel": "당신의 댕냥",
+      "badgeLabel": "댕냥 보호천사",
       "userName": "이지윤",
       "userAccount": "jiyoon0404@gmail.com",
       "phone": "010-2244-4422",

@@ -204,7 +204,7 @@ const submitForm = async () => {
       companyName: formData.value.companyName,
       title: formData.value.title,
       content: summary,
-      writer: '아자뵤', // 실제로는 로그인한 사용자
+      writer: '이지윤', // 실제로는 로그인한 사용자
       createdAt: new Date().toISOString().split('T')[0],
       likes: 0,
       comments: 0,
