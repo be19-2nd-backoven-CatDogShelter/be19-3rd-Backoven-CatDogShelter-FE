@@ -55,7 +55,7 @@ const submit = async () => {
             <svg viewBox="0 0 20 20" width="18" height="18"><path d="M12 4L6 10l6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             로그인으로
         </button>
-        <img class="logo" src="@/assets/logo.svg" alt="안냥보호센터" />
+        <img class="logo" src="@/assets/logo.svg" alt="댕냥쉼터" />
         <h2>보호소장 회원가입</h2>
         <p class="sub">보호소 운영자 전용 가입</p>
       </header>

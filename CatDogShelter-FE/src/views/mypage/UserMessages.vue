@@ -10,7 +10,7 @@
     i-/  つつ
           </pre>
         </div>
-        <h3 class="username">이다인</h3>
+        <h3 class="username">이지윤</h3>
         <span class="badge">1일차 쪽집게</span>
         
         <div class="profile-divider"></div>

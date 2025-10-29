@@ -118,7 +118,7 @@
         </li>
       </ul>
 
-      <!-- 닉네임 입력 제거, 익명 번호 자동 부여 -->
+      <!-- 닉네임 입력 제거, 이지윤 번호 자동 부여 -->
       <form class="c-form" @submit.prevent="addComment">
         <textarea v-model="newComment" class="input" placeholder="댓글을 입력하세요" rows="3" required />
         <div class="c-actions">
@@ -235,7 +235,7 @@ function share() {
   alert('링크가 복사되었습니다.')
 }
 
-// 댓글 추가(닉네임 없이 익명 번호 자동)
+// 댓글 추가(닉네임 없이 이지윤 번호 자동)
 function addComment() {
   const text = newComment.value.trim()
   if (!text || !state.post) return

@@ -105,7 +105,7 @@
       <div class="recruit-right">
         <div class="right-header">
           <h3 class="right-title">📋 전체 봉사모집</h3>
-          <button class="create-recruit-btn" @click="goToRecruitInsert">봉사모집 글 작성하기</button>
+          <button v-if="isShelterHead" class="create-recruit-btn" @click="goToRecruitInsert">봉사모집 글 작성하기</button>
         </div>
 
         <div class="search-filter-area">
@@ -152,7 +152,7 @@
         </div>
 
         <ul class="list">
-          <li v-for="(item, i) in filteredList" :key="i" class="list-item" @click="goToDetail(item.id)">
+          <li v-for="(item, i) in paginatedList" :key="i" class="list-item" @click="goToDetail(item.id)">
             <div class="list-item-left">
               <div class="item-badges">
                 <span class="item-badge companyName-badge">{{ item.companyName }}</span>
@@ -214,6 +214,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuth } from '@/views/auth/useAuth'
 import regionsData from '@/assets/data/regions.json'
 import calendarIcon from '@/assets/달력아이콘.svg'
 import clockIcon from '@/assets/시계아이콘.svg'
@@ -222,6 +223,14 @@ import peopleIcon from '@/assets/인원아이콘.svg'
 import searchIcon from '@/assets/돋보기아이콘.svg'
 
 const router = useRouter()
+const { authed } = useAuth()
+
+// ✅ 보호소장 여부 확인
+const isShelterHead = computed(() => {
+  const role = localStorage.getItem('role')
+  return role === 'SHELTER_HEAD'
+})
+
 const searchQuery = ref('')
 const currentPage = ref(1)
 const filters = ref({
@@ -304,177 +313,157 @@ const fetchVolunteerData = async () => {
       // 원본 데이터 저장 (정렬 없이)
       baseList.value = allList
 
-      // 최신순으로 정렬하여 list에 저장
-      list.value = [...allList].sort((a, b) => {
-        return new Date(b.createdAt) - new Date(a.createdAt)
+      // 정렬된 데이터 생성
+      const sortedList = [...allList].sort((a, b) => {
+        if (filters.value.sortOrder === 'latest') {
+          return new Date(b.createdAt) - new Date(a.createdAt)
+        } else {
+          return new Date(a.createdAt) - new Date(b.createdAt)
+        }
       })
-      console.log('데이터 로드 성공:', {
-        전체: list.value.length,
-        모집중: highlights.value.length
-      })
+
+      list.value = sortedList
     }
+    
+    loading.value = false
   } catch (err) {
-    console.error('데이터를 불러오는데 실패했습니다:', err)
+    console.error('Error fetching data:', err)
     error.value = err.message
-  } finally {
     loading.value = false
   }
+}
+
+// 정렬 옵션 변경 감지
+watch(() => filters.value.sortOrder, () => {
+  const sortedList = [...baseList.value].sort((a, b) => {
+    if (filters.value.sortOrder === 'latest') {
+      return new Date(b.createdAt) - new Date(a.createdAt)
+    } else {
+      return new Date(a.createdAt) - new Date(b.createdAt)
+    }
+  })
+  list.value = sortedList
+})
+
+// 카드 슬라이드 관련
+const currentIndex = ref(0)
+const highlight = computed(() => highlights.value[currentIndex.value])
+
+function nextSlide() {
+  if (currentIndex.value < highlights.value.length - 1) {
+    currentIndex.value++
+  } else {
+    currentIndex.value = 0
+  }
+}
+
+function prevSlide() {
+  if (currentIndex.value > 0) {
+    currentIndex.value--
+  } else {
+    currentIndex.value = highlights.value.length - 1
+  }
+}
+
+function goToSlide(index) {
+  currentIndex.value = index
+}
+
+// 검색 필터 적용
+function handleSearch() {
+  appliedQuery.value = searchQuery.value
+  appliedFilters.value = { ...filters.value }
+  currentPage.value = 1 // 검색 시 첫 페이지로 이동
+}
+
+// 필터링된 목록
+const filteredList = computed(() => {
+  let result = list.value
+
+  // 제목 검색
+  if (appliedQuery.value) {
+    result = result.filter(item => 
+      item.title.toLowerCase().includes(appliedQuery.value.toLowerCase())
+    )
+  }
+
+  // 시/도 필터
+  if (appliedFilters.value.sido) {
+    result = result.filter(item => item.sido === appliedFilters.value.sido)
+  }
+
+  // 시/군/구 필터
+  if (appliedFilters.value.sigungu) {
+    result = result.filter(item => item.sigungu === appliedFilters.value.sigungu)
+  }
+
+  // 모집상태 필터
+  if (appliedFilters.value.deadline) {
+    result = result.filter(item => item.deadline === appliedFilters.value.deadline)
+  }
+
+  return result
+})
+
+// 페이지네이션
+const itemsPerPage = 8
+const totalPages = computed(() => Math.ceil(filteredList.value.length / itemsPerPage))
+
+const paginatedList = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return filteredList.value.slice(start, end)
+})
+
+// 페이지 그룹 계산
+const pagesPerGroup = 10
+const currentGroup = computed(() => Math.floor((currentPage.value - 1) / pagesPerGroup))
+const totalGroups = computed(() => Math.ceil(totalPages.value / pagesPerGroup))
+
+const visiblePages = computed(() => {
+  const start = currentGroup.value * pagesPerGroup + 1
+  const end = Math.min(start + pagesPerGroup - 1, totalPages.value)
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i)
+})
+
+const hasPrevGroup = computed(() => currentGroup.value > 0)
+const hasNextGroup = computed(() => currentGroup.value < totalGroups.value - 1)
+
+function goToPage(page) {
+  currentPage.value = page
+}
+
+function goToPrevGroup() {
+  if (hasPrevGroup.value) {
+    currentPage.value = currentGroup.value * pagesPerGroup
+  }
+}
+
+function goToNextGroup() {
+  if (hasNextGroup.value) {
+    currentPage.value = (currentGroup.value + 1) * pagesPerGroup + 1
+  }
+}
+
+// 상세 페이지로 이동
+function goToDetail(id) {
+  router.push({ name: 'VolunteerDetail', params: { id } })
+}
+
+// 봉사모집 작성 페이지로 이동
+function goToRecruitInsert() {
+  router.push({ name: 'VolunteerRecruitInsert' })
+}
+
+// 봉사 신청 (추후 구현)
+function applyVolunteer(id) {
+  alert(`봉사 신청 기능은 추후 구현 예정입니다. (ID: ${id})`)
 }
 
 // 컴포넌트 마운트 시 데이터 가져오기
 onMounted(() => {
   fetchVolunteerData()
 })
-
-const currentIndex = ref(0)
-const highlight = computed(() => highlights.value[currentIndex.value])
-
-const itemsPerPage = 6
-const currentPageGroup = ref(0)
-const pagesPerGroup = 5
-
-function resetPagination() {
-  currentPage.value = 1
-  currentPageGroup.value = 0
-}
-
-const filteredAndSortedList = computed(() => {
-  let filteredData = [...list.value]
-  const normalizedQuery = appliedQuery.value ? appliedQuery.value.toLowerCase() : ''
-  const { sido, sigungu, deadline, sortOrder } = appliedFilters.value
-
-  if (normalizedQuery) {
-    filteredData = filteredData.filter(item =>
-      (item.title || '').toLowerCase().includes(normalizedQuery)
-    )
-  }
-
-  if (sido) {
-    filteredData = filteredData.filter(item => item.sido === sido)
-  }
-
-  if (sigungu) {
-    filteredData = filteredData.filter(item => item.sigungu === sigungu)
-  }
-
-  if (deadline) {
-    filteredData = filteredData.filter(item => {
-      if (deadline === '모집중') {
-        return item.deadline === '모집중' || item.deadlineClass === 'recruiting'
-      }
-      if (deadline === '마감임박') {
-        return item.deadline === '마감임박' || item.deadlineClass === 'closing'
-      }
-      return true
-    })
-  }
-
-  if (sortOrder === 'oldest') {
-    filteredData.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-  } else {
-    filteredData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-  }
-
-  return filteredData
-})
-
-const filteredList = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return filteredAndSortedList.value.slice(start, end)
-})
-
-const totalPages = computed(() => {
-  if (filteredAndSortedList.value.length === 0) {
-    return 0
-  }
-  return Math.ceil(filteredAndSortedList.value.length / itemsPerPage)
-})
-
-watch(filteredAndSortedList, newList => {
-  const total = Math.ceil(newList.length / itemsPerPage)
-  if (total === 0) {
-    if (currentPage.value !== 1 || currentPageGroup.value !== 0) {
-      resetPagination()
-    }
-    return
-  }
-
-  if (currentPage.value > total) {
-    currentPage.value = total
-  }
-
-  const targetGroup = Math.floor((currentPage.value - 1) / pagesPerGroup)
-  if (currentPageGroup.value !== targetGroup) {
-    currentPageGroup.value = targetGroup
-  }
-})
-
-const visiblePages = computed(() => {
-  const start = currentPageGroup.value * pagesPerGroup + 1
-  const end = Math.min(start + pagesPerGroup - 1, totalPages.value)
-  const pages = []
-  for (let i = start; i <= end; i++) {
-    pages.push(i)
-  }
-  return pages
-})
-
-const hasPrevGroup = computed(() => currentPageGroup.value > 0)
-const hasNextGroup = computed(() => {
-  const lastPageInGroup = (currentPageGroup.value + 1) * pagesPerGroup
-  return lastPageInGroup < totalPages.value
-})
-
-function nextSlide() {
-  currentIndex.value = (currentIndex.value + 1) % highlights.value.length
-}
-
-function prevSlide() {
-  currentIndex.value = (currentIndex.value - 1 + highlights.value.length) % highlights.value.length
-}
-
-function goToSlide(i) {
-  currentIndex.value = i
-}
-
-function goToPrevGroup() {
-  if (hasPrevGroup.value) {
-    currentPageGroup.value--
-    currentPage.value = currentPageGroup.value * pagesPerGroup + 1
-  }
-}
-
-function goToNextGroup() {
-  if (hasNextGroup.value) {
-    currentPageGroup.value++
-    currentPage.value = currentPageGroup.value * pagesPerGroup + 1
-  }
-}
-
-function goToPage(page) {
-  currentPage.value = page
-}
-
-function handleSearch() {
-  const trimmed = searchQuery.value.trim()
-  searchQuery.value = trimmed
-  appliedQuery.value = trimmed
-  appliedFilters.value = { ...filters.value }
-  resetPagination()
-}
-
-function goToRecruitInsert() {
-  router.push('/shelter-head/mypage/recruitinsert')
-}
-
-function goToDetail(id) {
-  router.push(`/volunteer/detail/${id}`)
-}
-
-function applyVolunteer(id) {
-  goToDetail(id)
-}
 </script>
 
 <style scoped>

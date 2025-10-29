@@ -21,30 +21,46 @@ const signupLabel = computed(() =>
 const signupHint = computed(() =>
   role.value === 'USER'
     ? '아직 회원이 아니신가요? 일반회원으로 가입해 주세요.'
-    : '보호소장님, 안냥보호센터와 함께해요. 보호소장 전용 회원가입으로 진행됩니다.'
+    : '보호소장님, 댕냥쉼터와 함께해요. 보호소장 전용 회원가입으로 진행됩니다.'
 )
 
-/** ✅ 임시 관리자 우회 로그인 추가 */
+/** ✅ 로그인 처리 (관리자/보호소장/일반) */
 const submit = async () => {
-  // 1) 임시 관리자 계정이면 백엔드 호출 없이 바로 통과
+  // 1) 임시 관리자 계정
   if (form.value.email === 'admin' && form.value.password === 'Admin!2025demo') {
     authed.value = true
-    // 로그인 상태 플래그
     localStorage.setItem('authed', '1')
-    // 라우터 가드/헤더 분기용 역할 값
-    localStorage.setItem('role', 'ADMIN')        // router.beforeEach에서 사용
-    localStorage.setItem('userRole', 'admin')     // 헤더 드롭다운 분기용(있으면)
-    // 필요하면 더미 유저 정보 저장
+    localStorage.setItem('role', 'ADMIN')
+    localStorage.setItem('userRole', 'admin')
     localStorage.setItem('user', JSON.stringify({
       account: 'admin',
       name: '관리자',
+      role: 'ADMIN'
     }))
-    // 그냥 홈으로 (헤더의 “내 정보”는 /admin으로 향함)
     await router.push({ name: 'home' })
     return
   }
 
-  // 2) 일반 로그인 플로우
+  // 2) ✅ 하드코딩된 보호소장 계정
+  if (form.value.email === 'shelter' && form.value.password === 'Shelter!2025') {
+    authed.value = true
+    localStorage.setItem('authed', '1')
+    localStorage.setItem('role', 'SHELTER_HEAD')
+    localStorage.setItem('userRole', 'shelter')
+    localStorage.setItem('user', JSON.stringify({
+      email: 'dain0404@gmail.com',
+      name: '부천시 고양이 보호소',
+      phone: '010-2244-4422',
+      location: '경기도 부천시',
+      joinDate: '2025-01-19',
+      role: 'SHELTER_HEAD',
+      shelterName: '부천시 고양이 보호소'
+    }))
+    await router.push({ name: 'home' })
+    return
+  }
+
+  // 3) 일반 로그인 플로우
   const ok = await login({ ...form.value, role: role.value, keep: keep.value })
   if (ok) {
     router.push({ name: 'home' })
@@ -67,8 +83,8 @@ const emit = defineEmits(['success'])
   <section class="card" role="dialog" aria-modal="true" aria-label="로그인">
     <!-- 상단 로고 + 타이틀 -->
     <header class="card-head">
-      <img class="logo" src="@/assets/logo.svg" alt="안냥보호센터" />
-      <h2 class="title">안냥보호센터 로그인</h2>
+      <img class="logo" src="@/assets/logo.svg" alt="댕냥쉼터" />
+      <h2 class="title">댕냥쉼터 로그인</h2>
       <p class="subtitle">더 좋은 입양문화를 만들어가는 길</p>
     </header>
 
@@ -99,7 +115,7 @@ const emit = defineEmits(['success'])
           type="text"
           autocomplete="username"
           required
-          placeholder="아이디를 입력하세요"
+          :placeholder="role === 'SHELTER_HEAD' ? 'shelter' : '아이디를 입력하세요'"
         />
       </label>
 
@@ -111,7 +127,7 @@ const emit = defineEmits(['success'])
           autocomplete="current-password"
           minlength="6"
           required
-          placeholder="비밀번호를 입력하세요"
+          :placeholder="role === 'SHELTER_HEAD' ? 'Shelter!2025' : '비밀번호를 입력하세요'"
         />
       </label>
 
@@ -132,6 +148,15 @@ const emit = defineEmits(['success'])
     <p class="hint" style="text-align:center; margin:10px 0 6px; color:#8a8a8a; font-size:12px;">
       {{ signupHint }}
     </p>
+    
+    <!-- 테스트 계정 안내 -->
+    <!-- <div v-if="role === 'SHELTER_HEAD'" class="test-info">
+      💡 보호소장 테스트: shelter / Shelter!2025
+    </div>
+    <div v-else class="test-info">
+      💡 관리자 테스트: admin / Admin!2025demo
+    </div> -->
+    
     <div class="links">
       <!-- 회원가입 -->
       <router-link :to="signupRoute" class="link main">{{ signupLabel }}</router-link>
@@ -196,11 +221,31 @@ input:focus { border-color: #d1b57a; background: #fff; }
 }
 .submit:disabled { opacity: .6; cursor: default; }
 
+.error {
+  color: #d32f2f;
+  font-size: 13px;
+  margin-top: 8px;
+  text-align: center;
+}
+
 .hint { text-align:center; margin:10px 0 6px; color:#8a8a8a; font-size:12px; }
+
+.test-info {
+  text-align: center;
+  margin: 8px 0;
+  padding: 8px;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
+  color: #856404;
+  font-size: 12px;
+  font-weight: 600;
+}
 
 .links { margin-top: 6px; text-align: center; color:#666; font-size: 13px; }
 .link { color:#666; text-decoration: none; }
 .link.main { color: #c6932d; font-weight: 700; }
 .link:hover { text-decoration: underline; }
 .dot { margin: 0 6px; color:#bdbdbd; }
+.sep { margin: 0 6px; color:#bdbdbd; }
 </style>

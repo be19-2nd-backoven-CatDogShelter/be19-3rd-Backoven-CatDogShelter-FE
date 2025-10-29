@@ -222,7 +222,7 @@
               <div class="writer-role-badge">
                 {{ post.writer.ratingName || '일반회원' }}
               </div>
-              <div class="writer-name">작성자 : {{ post.writer.name || '익명' }}</div>
+              <div class="writer-name">작성자 : {{ post.writer.name || '이지윤' }}</div>
             </div>
           </aside>
         </article>

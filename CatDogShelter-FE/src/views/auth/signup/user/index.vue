@@ -105,7 +105,7 @@ const ok = await signup(payload)
           </svg>
           로그인으로
         </button>
-        <img class="logo" src="@/assets/logo.svg" alt="안냥보호센터" />
+        <img class="logo" src="@/assets/logo.svg" alt="댕냥쉼터" />
         <h2>회원가입</h2>
       </header>
 

@@ -113,7 +113,7 @@ export default {
 
     // 임시 로그인/식별자 (나중에 토큰 기반으로 치환)
     const dummyHeadId = 3   // 보호소장 id (삭제/권한용)
-    const dummyUserId = 16   // 실제 user 테이블에 존재하는 user_id
+    const dummyUserId = 6   // 실제 user 테이블에 존재하는 user_id
 
     // ===== 게시글 상태 =====
     const post = ref({

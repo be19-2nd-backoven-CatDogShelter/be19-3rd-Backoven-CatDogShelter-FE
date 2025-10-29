@@ -3,7 +3,7 @@
   <section class="terms-page">
     <div class="terms-inner">
       <!-- ===== 목차 (왼쪽 사이드) ===== -->
-      <aside class="terms-aside" ref="asideEl">
+      <aside class="terms-aside">
         <nav class="toc">
           <h2 class="toc-head">목차</h2>
           <ul class="toc-list">
@@ -47,7 +47,6 @@
         <section
           id="article-1"
           class="article-card"
-          ref="sectionRefs"
           data-id="article-1"
         >
           <h2 class="article-title">제1조 (목적)</h2>
@@ -67,24 +66,23 @@
         <section
           id="article-2"
           class="article-card"
-          ref="sectionRefs"
           data-id="article-2"
         >
           <h2 class="article-title">제2조 (정의)</h2>
           <ul class="list-body">
             <li>
-              <strong>“서비스”</strong>란 댕냥쉼터에서 제공하는 웹/모바일 화면,
+              <strong>"서비스"</strong>란 댕냥쉼터에서 제공하는 웹/모바일 화면,
               게시판, 커뮤니티, 메신저 등 모든 기능을 의미합니다.
             </li>
             <li>
-              <strong>“회원”</strong>이란 약관에 동의하고 가입한 이용자를 말합니다.
+              <strong>"회원"</strong>이란 약관에 동의하고 가입한 이용자를 말합니다.
             </li>
             <li>
-              <strong>“게시물”</strong>이란 회원이 서비스에 등록한 글, 사진, 댓글,
+              <strong>"게시물"</strong>이란 회원이 서비스에 등록한 글, 사진, 댓글,
               위치 정보, 구조/실종 제보 등의 모든 컨텐츠를 의미합니다.
             </li>
             <li>
-              <strong>“보호소 계정 / 단체 계정”</strong>은 실제 보호소나 단체가
+              <strong>"보호소 계정 / 단체 계정"</strong>은 실제 보호소나 단체가
               등록/인증하여 운영하는 계정을 말하며, 일반 회원과는 별도의
               책임·관리 기준이 적용될 수 있습니다.
             </li>
@@ -95,7 +93,6 @@
         <section
           id="article-3"
           class="article-card"
-          ref="sectionRefs"
           data-id="article-3"
         >
           <h2 class="article-title">제3조 (약관의 효력 및 변경)</h2>
@@ -118,7 +115,6 @@
         <section
           id="article-4"
           class="article-card"
-          ref="sectionRefs"
           data-id="article-4"
         >
           <h2 class="article-title">제4조 (회원가입 및 계정관리)</h2>
@@ -146,7 +142,6 @@
         <section
           id="article-5"
           class="article-card"
-          ref="sectionRefs"
           data-id="article-5"
         >
           <h2 class="article-title">제5조 (서비스의 이용)</h2>
@@ -169,7 +164,6 @@
         <section
           id="article-6"
           class="article-card"
-          ref="sectionRefs"
           data-id="article-6"
         >
           <h2 class="article-title">제6조 (게시물의 관리 및 책임)</h2>
@@ -204,7 +198,6 @@
         <section
           id="article-7"
           class="article-card"
-          ref="sectionRefs"
           data-id="article-7"
         >
           <h2 class="article-title">제7조 (개인정보 보호 및 유출 방지)</h2>
@@ -229,7 +222,6 @@
         <section
           id="article-8"
           class="article-card"
-          ref="sectionRefs"
           data-id="article-8"
         >
           <h2 class="article-title">제8조 (권리·의무 및 면책)</h2>
@@ -256,7 +248,6 @@
         <section
           id="article-9"
           class="article-card"
-          ref="sectionRefs"
           data-id="article-9"
         >
           <h2 class="article-title">제9조 (약관의 준거법 및 분쟁해결)</h2>
@@ -282,30 +273,58 @@
 </template>
 
 <script>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-
 export default {
-  name: 'TermsOfUseView',
-  setup() {
-    // 목차 정의 (왼쪽 aside랑 section id 매칭)
-    const tocItems = [
-      { id: 'article-1', label: '제1조 (목적)' },
-      { id: 'article-2', label: '제2조 (정의)' },
-      { id: 'article-3', label: '제3조 (약관의 효력 및 변경)' },
-      { id: 'article-4', label: '제4조 (회원가입 및 계정관리)' },
-      { id: 'article-5', label: '제5조 (서비스의 이용)' },
-      { id: 'article-6', label: '제6조 (게시물의 관리 및 책임)' },
-      { id: 'article-7', label: '제7조 (개인정보 보호 및 유출 방지)' },
-      { id: 'article-8', label: '제8조 (권리·의무 및 면책)' },
-      { id: 'article-9', label: '제9조 (준거법 및 분쟁해결)' },
-    ]
+  name: 'TermsView',
+  data() {
+    return {
+      tocItems: [
+        { id: 'article-1', label: '제1조 (목적)' },
+        { id: 'article-2', label: '제2조 (정의)' },
+        { id: 'article-3', label: '제3조 (약관의 효력 및 변경)' },
+        { id: 'article-4', label: '제4조 (회원가입 및 계정관리)' },
+        { id: 'article-5', label: '제5조 (서비스의 이용)' },
+        { id: 'article-6', label: '제6조 (게시물의 관리 및 책임)' },
+        { id: 'article-7', label: '제7조 (개인정보 보호 및 유출 방지)' },
+        { id: 'article-8', label: '제8조 (권리·의무 및 면책)' },
+        { id: 'article-9', label: '제9조 (준거법 및 분쟁해결)' },
+      ],
+      activeSection: 'article-1',
+      observer: null
+    }
+  },
+  mounted() {
+    this.$nextTick(() => {
+      const options = {
+        root: null,
+        rootMargin: '0px 0px -60% 0px',
+        threshold: 0,
+      }
 
-    const activeSection = ref('article-1')
-    const sectionRefs = ref([])
-    const asideEl = ref(null)
+      this.observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('data-id')
+            if (id) {
+              this.activeSection = id
+            }
+          }
+        })
+      }, options)
 
-    // 스크롤 이동 핸들러
-    const goTo = (id) => {
+      const sections = this.$el.querySelectorAll('[data-id]')
+      sections.forEach((secEl) => {
+        if (secEl) this.observer.observe(secEl)
+      })
+    })
+  },
+  beforeUnmount() {
+    if (this.observer) {
+      this.observer.disconnect()
+      this.observer = null
+    }
+  },
+  methods: {
+    goTo(id) {
       const el = document.getElementById(id)
       if (!el) return
       el.scrollIntoView({
@@ -313,46 +332,7 @@ export default {
         block: 'start',
       })
     }
-
-    let observer = null
-
-    onMounted(() => {
-      const options = {
-        root: null,
-        rootMargin: '0px 0px -60% 0px',
-        threshold: 0,
-      }
-
-      observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const id = entry.target.getAttribute('data-id')
-            if (id) {
-              activeSection.value = id
-            }
-          }
-        })
-      }, options)
-
-      sectionRefs.value.forEach((secEl) => {
-        if (secEl) observer.observe(secEl)
-      })
-    })
-
-    onBeforeUnmount(() => {
-      if (observer) {
-        observer.disconnect()
-      }
-    })
-
-    return {
-      tocItems,
-      activeSection,
-      goTo,
-      sectionRefs,
-      asideEl,
-    }
-  },
+  }
 }
 </script>
 
@@ -383,7 +363,7 @@ export default {
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 40px 16px 80px;
+  padding: 40px 16px 40px;
   line-height: 1.5;
   font-size: 15px;
 }

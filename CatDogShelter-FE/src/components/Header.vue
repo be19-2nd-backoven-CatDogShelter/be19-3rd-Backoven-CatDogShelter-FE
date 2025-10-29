@@ -41,14 +41,28 @@
             <!-- 드롭다운 메뉴 -->
             <div class="dropdown-menu">
               <RouterLink :to="myPageTo" class="dropdown-item">
-                내 정보
+                {{ myPageLinkLabel }}
               </RouterLink>
-              <RouterLink to="/mypage/messages" class="dropdown-item">
-                쪽지보내기
-              </RouterLink>
-              <RouterLink to="/volunteer" class="dropdown-item">
-                내 봉사활동
-              </RouterLink>
+              
+              <!-- 보호소장 전용 메뉴 -->
+              <template v-if="isShelterHead">
+                <RouterLink to="/shelter-head/mypage/recruitinsert" class="dropdown-item">
+                  봉사모집 작성
+                </RouterLink>
+                <RouterLink to="/shelter-head/mypage/applicants" class="dropdown-item">
+                  봉사신청 관리
+                </RouterLink>
+              </template>
+              
+              <!-- 일반 회원 메뉴 -->
+              <template v-else-if="!isAdmin">
+                <RouterLink to="/mypage/messages" class="dropdown-item">
+                  쪽지보내기
+                </RouterLink>
+                <RouterLink to="/volunteer" class="dropdown-item">
+                  내 봉사활동
+                </RouterLink>
+              </template>
             </div>
           </div>
 
@@ -62,24 +76,70 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/views/auth/useAuth'
 
 const router = useRouter()
 const { authed, logout } = useAuth()
 
-// 로그인 상태에 따라 로컬 role을 반영 (초기/변경 모두)
-const userRole = ref(localStorage.getItem('userRole') || 'user')
-watch(authed, (v) => {
-  userRole.value = v ? (localStorage.getItem('userRole') || 'user') : 'user'
+// 현재 role 상태
+const currentRole = ref(localStorage.getItem('role') || '')
+const shelterName = ref('')
+
+// 사용자 정보 로드
+const loadUserInfo = () => {
+  currentRole.value = localStorage.getItem('role') || ''
+  
+  const storedUser = localStorage.getItem('user')
+  if (storedUser && currentRole.value === 'SHELTER_HEAD') {
+    try {
+      const userData = JSON.parse(storedUser)
+      shelterName.value = userData.shelterName || userData.name || '보호소'
+    } catch (e) {
+      console.error('사용자 정보 파싱 실패:', e)
+      shelterName.value = '보호소'
+    }
+  } else {
+    shelterName.value = ''
+  }
+}
+
+// 초기 로드
+onMounted(() => {
+  loadUserInfo()
 })
 
-// "내 정보" 버튼 목적지 계산 (관리자 → /admin, 보호소장 → /shelter-head/mypage, 일반 → /mypage)
+// 로그인 상태 변경 감지
+watch(authed, (isAuthed) => {
+  if (isAuthed) {
+    loadUserInfo()
+  } else {
+    // 로그아웃 시 모든 상태 초기화
+    currentRole.value = ''
+    shelterName.value = ''
+  }
+})
+
+// 역할 체크
+const isAdmin = computed(() => currentRole.value === 'ADMIN')
+const isShelterHead = computed(() => currentRole.value === 'SHELTER_HEAD')
+const isUser = computed(() => currentRole.value === 'USER' || (!isAdmin.value && !isShelterHead.value && authed.value))
+
+// 마이페이지 링크 라벨 (드롭다운 첫 번째 항목)
+const myPageLinkLabel = computed(() => {
+  if (isAdmin.value) return '관리자 페이지'
+  if (isShelterHead.value) return '보호소 정보'
+  return '내 정보'
+})
+
+// "내 정보" 버튼 목적지 계산
 const myPageTo = computed(() => {
-  const role = (localStorage.getItem('role') || '').toUpperCase()
+  const role = currentRole.value
+  console.log('Current role:', role)  // 디버깅용
+  
   if (role === 'ADMIN') return '/admin'
-  if (role === 'SHELTER_HEAD' || userRole.value === 'shelter') return '/shelter-head/mypage'
+  if (role === 'SHELTER_HEAD') return '/shelter-head/mypage'
   return '/mypage'
 })
 
@@ -89,8 +149,9 @@ function goLogin() {
 
 function doLogout() {
   logout()
-  localStorage.removeItem('role')
-  localStorage.removeItem('userRole')
+  // 상태 즉시 초기화
+  currentRole.value = ''
+  shelterName.value = ''
   router.push({ name: 'home' })
 }
 </script>

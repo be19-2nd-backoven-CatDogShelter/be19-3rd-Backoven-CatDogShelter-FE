@@ -843,9 +843,9 @@ import searchIcon from '@/assets/돋보기아이콘.svg'
   display: grid;
   grid-template-columns: 120px 1fr auto;
   gap: 16px;
-  background: var(--panel-soft-bg);
+  background: #fff;
   border: 1px solid var(--line-card);
-  border-radius: 6px;
+  border-radius: 15px;
   padding: 16px;
   font-size: 13px;
   line-height: 1.4;

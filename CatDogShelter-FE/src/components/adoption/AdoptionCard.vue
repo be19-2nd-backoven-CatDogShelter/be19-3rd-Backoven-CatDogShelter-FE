@@ -45,27 +45,14 @@ const PLACEHOLDER = '/noImg.png'
 // 2) 전체 경로인 경우: "/post-service/adoption-post/image/cat.png"
 // 둘 다 처리하도록 정규화
 const imageUrl = computed(() => {
-  // If backend provided files array, prefer its first file's URL
-  if (props.post && Array.isArray(props.post.files) && props.post.files.length > 0) {
-    const f = props.post.files[0]
-    if (f.fileUrl) {
-      if (f.fileUrl.startsWith('http')) return f.fileUrl
-      const path = f.fileUrl.startsWith('/') ? f.fileUrl : `/${f.fileUrl}`
-      return `http://localhost:8000${path}`
-    }
-    if (f.fileRename && props.post.id) {
-      return `http://localhost:8000/post-service/adoption-post/${props.post.id}/files/${f.fileRename}`
-    }
-  }
-
-  // Fallback to storageFileName field if present
   const v = props.post.storageFileName
   if (!v) return PLACEHOLDER
+
   if (v.startsWith('http')) return v
-  if (props.post && props.post.id) {
-    return `http://localhost:8000/post-service/adoption-post/${props.post.id}/files/${v}`
-  }
-  return `http://localhost:8000/files/adoption/${v}`
+  return `http://localhost:8000/post-service/adoption-post/image/${v}`
+
+  // 파일명만 온 경우
+  return `http://localhost:8000/post-service/adoption-post/image/${v}`
 })
 
 function onImgError(e) {

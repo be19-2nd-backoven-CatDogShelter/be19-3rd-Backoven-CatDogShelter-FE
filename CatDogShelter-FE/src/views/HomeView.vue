@@ -24,16 +24,12 @@
 
         <!-- ===== 오른쪽 비주얼 영역 ===== -->
         <div class="hero-art">
-          <!-- 구름들 -->
           <img class="cloud cloud-a float-cloud-slow" src="@/assets/cloud.png" alt="" />
           <img class="cloud cloud-b float-cloud-fast" src="@/assets/cloud.png" alt="" />
-
-          <!-- 강아지+고양이 -->
           <img class="pets fade-up delay-1" src="@/assets/dog-cat.png" alt="댕냥이들" />
         </div>
       </div>
 
-      <!-- 하단 곡선 장식 + 움직이는 물결 -->
       <div class="hero-wave">
         <img src="@/assets/wave-bottom.svg" alt="" class="wave-static-svg" />
       </div>
@@ -42,55 +38,48 @@
     <!-- ================= MAIN CONTENT ================= -->
     <section class="home-main">
       <div class="home-inner">
+
         <!-- ========= 좌측 메인 영역 ========= -->
         <div class="main-left">
           <!-- [입양 게시판] 카드 3개 가로 -->
           <div class="board-section">
             <div class="board-header">
               <h2>댕냥이들 입양하러 가기</h2>
-
-              <!-- 더보기: 입양 페이지로 -->
               <router-link class="more-link" to="/adoption">더보기 ></router-link>
             </div>
 
-            <!-- 입양 카드 리스트 -->
             <div class="adoption-card-row">
-  <article
-    class="adoption-card"
-    v-for="pet in adoptionList"
-    :key="pet.id"
-    @click="goAdoptionDetail(pet.id)"
-  >
-    <div class="adoption-thumb">
-      <template v-if="pet.thumbnailUrl && pet.thumbnailUrl.trim() !== ''">
-        <img
-          class="adoption-img"
-          :src="pet.thumbnailUrl"
-          :alt="pet.name"
-        />
-      </template>
-      <template v-else>
-        <div class="thumb-fallback">사진</div>
-      </template>
-    </div>
+              <article
+                class="adoption-card"
+                v-for="pet in adoptionList"
+                :key="pet.id"
+                @click="goAdoptionDetail(pet.id)"
+              >
+                <div class="adoption-thumb">
+                  <template v-if="pet.thumbnailUrl?.trim()">
+                    <img class="adoption-img" :src="pet.thumbnailUrl" :alt="pet.name" />
+                  </template>
+                  <template v-else>
+                    <div class="thumb-fallback">사진</div>
+                  </template>
+                </div>
 
-    <div class="adoption-info">
-      <h3 class="pet-name">{{ pet.name }}</h3>
-      <p class="pet-meta">
-        {{ pet.breed }} / {{ pet.age }}살 / 중성화
-        {{ pet.neutered ? "O" : "X" }}
-      </p>
-    </div>
-  </article>
-</div>
+                <div class="adoption-info">
+                  <h3 class="pet-name">{{ pet.name }}</h3>
+                  <p class="pet-meta">
+                    {{ pet.breed }} /
+                    {{ pet.age }}살 /
+                    중성화 {{ pet.neutered ? "O" : "X" }}
+                  </p>
+                </div>
+              </article>
+            </div>
           </div>
 
-          <!-- [봉사모임 게시판] 리스트 -->
+          <!-- 봉사 -->
           <div class="board-section">
             <div class="board-header">
               <h2>유기견&유기묘 봉사모임</h2>
-
-              <!-- 더보기: 봉사 게시판 메인으로 -->
               <router-link class="more-link" to="/volunteer">더보기 ></router-link>
             </div>
 
@@ -102,19 +91,15 @@
                 @click="goVolunteerDetail(post.id)"
               >
                 <span class="title">{{ post.title }}</span>
-                <span class="meta">
-                  👥 모집현황 {{ post.viewCount }}
-                </span>
+                <span class="meta">👥 모집현황 {{ post.viewCount }}</span>
               </li>
             </ul>
           </div>
 
-          <!-- [자유게시판] 리스트 -->
+          <!-- 자유게시판 -->
           <div class="board-section">
             <div class="board-header">
               <h2>자유게시판</h2>
-
-              <!-- 더보기: 자유게시판 목록으로 -->
               <router-link class="more-link" to="/post">더보기 ></router-link>
             </div>
 
@@ -139,14 +124,11 @@
         <aside class="main-right">
           <!-- 로그인 카드 -->
           <div class="side-card login-card">
-            <!-- ====== 비로그인 상태 ====== -->
-            <template v-if="!isLoggedIn">
+
+            <!-- 비로그인 -->
+            <template v-if="!authed">
               <div class="login-top">
-                <img
-                  class="brand-logo"
-                  src="@/assets/logo.svg"
-                  alt="댕냥쉼터 로고"
-                />
+                <img class="brand-logo" src="@/assets/logo.svg" />
               </div>
 
               <p class="login-title">댕냥쉼터 로그인하기</p>
@@ -154,27 +136,22 @@
               <button class="login-btn" @click="goLogin">
                 로그인하러 가기
               </button>
-
               <small class="login-desc">로그인해야 이용하실 수 있어요!</small>
             </template>
 
-            <!-- ====== 로그인 상태 ====== -->
+            <!-- 로그인 -->
             <template v-else>
               <div class="login-top logged-top">
-                <img
-                  class="brand-logo big"
-                  src="@/assets/logo.svg"
-                  alt="댕냥쉼터 로고"
-                />
+                <img class="brand-logo big" src="@/assets/logo.svg" />
               </div>
 
               <p class="welcome-line">
-                ♡ ·· <strong>{{ userName }}</strong>님 어서오세요!
+                ♡ ·· <strong>{{ user?.userName }}</strong>님 어서오세요!
               </p>
 
               <div class="profile-row">
-                <span class="user-name">{{ userName }}</span>
-                <span class="user-badge">{{ userTitle }}</span>
+                <span class="user-name">{{ user?.userName }}</span>
+                <span class="user-badge">{{ user?.ratingName || "댕냥 보호천사" }}</span>
 
                 <button class="mypage-btn" @click="goMypage">
                   마이페이지 열기
@@ -183,7 +160,7 @@
             </template>
           </div>
 
-          <!-- 댕냥히어로즈 -->
+          <!-- 히어로 -->
           <div class="side-card hero-card">
             <div class="hero-header">
               <h3>이달의 댕냥 히어로즈 🐾</h3>
@@ -199,7 +176,7 @@
             </ol>
           </div>
 
-          <!-- ===== 실종: 댕냥이들을 찾아주세요 ===== -->
+          <!-- 실종 -->
           <div class="side-card photo-board">
             <div class="board-header tight">
               <h3>댕냥이들을 찾아주세요</h3>
@@ -207,7 +184,6 @@
             </div>
 
             <div class="photo-list">
-              <!-- 실제 데이터 -->
               <div
                 v-for="post in missingPreview"
                 :key="post.id"
@@ -216,37 +192,26 @@
               >
                 <div class="photo-thumb-wrap">
                   <img
-                    v-if="post.thumbnailUrl && post.thumbnailUrl.trim() !== ''"
+                    v-if="post.thumbnailUrl?.trim()"
                     class="photo-thumb"
                     :src="post.thumbnailUrl"
-                    :alt="post.title || '실종 동물'"
                   />
                   <div v-else class="photo-fallback">사진</div>
                 </div>
 
                 <div class="photo-caption">
                   <div class="caption-title">{{ post.title }}</div>
-                  <div class="caption-meta">
-                    {{ post.animalTypeLabel || '' }}
-                    <span
-                      v-if="post.animalTypeLabel && post.missingLocation"
-                    >·</span>
-                    {{ post.missingLocation || '' }}
-                  </div>
+                  <div class="caption-meta">{{ post.animalTypeLabel }} · {{ post.missingLocation }}</div>
                 </div>
               </div>
 
-              <!-- 아무 글도 없을 때 -->
-              <div
-                v-if="missingPreview.length === 0"
-                class="photo-empty"
-              >
+              <div v-if="missingPreview.length === 0" class="photo-empty">
                 등록된 실종 제보가 없습니다.
               </div>
             </div>
           </div>
 
-          <!-- ===== 목격: 댕냥이들을 목격했어요 ===== -->
+          <!-- 목격 -->
           <div class="side-card photo-board">
             <div class="board-header tight">
               <h3>댕냥이들을 목격했어요</h3>
@@ -262,26 +227,20 @@
               >
                 <div class="photo-thumb-wrap">
                   <img
-                    v-if="post.thumbnailUrl && post.thumbnailUrl.trim() !== ''"
+                    v-if="post.thumbnailUrl?.trim()"
                     class="photo-thumb"
                     :src="post.thumbnailUrl"
-                    :alt="post.title || '목격 제보'"
                   />
                   <div v-else class="photo-fallback">사진</div>
                 </div>
 
                 <div class="photo-caption">
                   <div class="caption-title">{{ post.title }}</div>
-                  <div class="caption-meta">
-                    {{ post.missingLocation || post.location || '' }}
-                  </div>
+                  <div class="caption-meta">{{ post.missingLocation || post.location }}</div>
                 </div>
               </div>
 
-              <div
-                v-if="sightingPreview.length === 0"
-                class="photo-empty"
-              >
+              <div v-if="sightingPreview.length === 0" class="photo-empty">
                 최근 목격 제보가 없습니다.
               </div>
             </div>
@@ -291,9 +250,7 @@
           <div class="side-card notice-card">
             <h3>공지사항</h3>
             <ul>
-              <li v-for="note in noticeList" :key="note.id">
-                {{ note.text }}
-              </li>
+              <li v-for="note in noticeList" :key="note.id">{{ note.text }}</li>
             </ul>
           </div>
         </aside>
@@ -305,48 +262,25 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { useAuth } from "@/views/auth/useAuth";
 
 const router = useRouter();
-
 const API_BASE = "http://localhost:8080";
 
-// ===== 로그인 상태 관련 상태값 =====
-const isLoggedIn = ref(false);
-const userName = ref("");
-const userTitle = ref("");
+const { authed, user, fetchMe } = useAuth();
 
-// ===== 라우팅 함수들 =====
-function goLogin() {
-  router.push("/login");
-}
-function goMypage() {
-  router.push("/mypage");
-}
-function goAdoption() {
-  router.push("/adoption");
-}
+// Navigation
+const goLogin = () => router.push("/login");
+const goMypage = () => router.push("/mypage");
+const goAdoption = () => router.push("/adoption");
+const goAdoptionDetail = (id) => router.push(`/adoption-post/${id}`);
+const goVolunteerDetail = (id) => router.push(`/volunteer/detail/${id}`);
+const goFreeDetail = (id) => router.push(`/post/${id}`);
+const goMissingDetail = (id) =>
+  router.push({ name: "missing-detail", params: { postId: id } });
+const goSightingDetail = (id) => router.push(`/sighting/${id}`);
 
-// 디테일 페이지용 (id 넘겨서 이동)
-function goVolunteerDetail(id) {
-  router.push(`/volunteer/detail/${id}`);
-}
-function goFreeDetail(id) {
-  router.push(`/post/${id}`);
-}
-function goAdoptionDetail(id) {
-  router.push(`/adoption/detail/${id}`);
-}
-function goMissingDetail(id) {
-  router.push({
-    name: "missing-detail",
-    params: { postId: id },
-  });
-}
-function goSightingDetail(id) {
-  router.push(`/sighting/${id}`);
-}
-
-// ===== 메인 화면에 뿌릴 데이터들 =====
+// Data
 const adoptionList = ref([]);
 const volunteerList = ref([]);
 const freeList = ref([]);
@@ -355,26 +289,7 @@ const noticeList = ref([]);
 const missingPreview = ref([]);
 const sightingPreview = ref([]);
 
-onMounted(async () => {
-  // 1) 로그인 여부/프로필 채우기
-  const token = sessionStorage.getItem("accessToken");
-
-  if (token) {
-    isLoggedIn.value = true;
-
-    // 로그인 시 로그인 로직에서 저장해뒀다고 가정할 값들
-    // (백엔드 연동되면 여기서 실제 /me 같은 API fetch로 바꿔주면 돼)
-    userName.value =
-      sessionStorage.getItem("userName") || "이다인"; // fallback
-    userTitle.value =
-      sessionStorage.getItem("userTitle") || "댕냥 보호천사";
-  } else {
-    isLoggedIn.value = false;
-    userName.value = "";
-    userTitle.value = "";
-  }
-
-  // 2) 홈에 필요한 json-server 데이터 로드
+async function loadHomeData() {
   try {
     const [
       adoptionRes,
@@ -385,21 +300,13 @@ onMounted(async () => {
       missingRes,
       sightingRes,
     ] = await Promise.all([
-      fetch(`${API_BASE}/adoptionPosts`),
-      fetch(`${API_BASE}/volunteerPosts`),
-      fetch(`${API_BASE}/freePosts`),
-      fetch(`${API_BASE}/heroList`),
-      fetch(`${API_BASE}/noticeList`),
-
-      // 최근 실종 제보
-      fetch(
-        `${API_BASE}/missingPosts?_sort=createdAt&_order=desc&_limit=2`
-      ),
-
-      // 최근 목격 제보
-      fetch(
-        `${API_BASE}/sightingPosts?_sort=createdAt&_order=desc&_limit=2`
-      ).catch(() => null),
+      fetch(`${API_BASE}/adoptionPosts?_sort=createdAt&_order=desc&_limit=3`),
+      fetch(`${API_BASE}/volunteerPosts?_limit=5`),
+      fetch(`${API_BASE}/freePosts?_limit=5`),
+      fetch(`${API_BASE}/heroList?_limit=3`),
+      fetch(`${API_BASE}/noticeList?_limit=5`),
+      fetch(`${API_BASE}/missingPosts?_sort=createdAt&_order=desc&_limit=2`),
+      fetch(`${API_BASE}/sightingPosts?_sort=createdAt&_order=desc&_limit=2`).catch(() => null),
     ]);
 
     adoptionList.value = await adoptionRes.json();
@@ -407,53 +314,30 @@ onMounted(async () => {
     freeList.value = await freeRes.json();
     heroList.value = await heroRes.json();
     noticeList.value = await noticeRes.json();
+    missingPreview.value = await missingRes.json();
 
-    // 실종 미리보기
-    const missingRaw = await missingRes.json();
-    missingPreview.value = Array.isArray(missingRaw)
-      ? missingRaw.map((item) => ({
-          id: item.id,
-          title: item.title || "",
-          thumbnailUrl: item.thumbnailUrl || "",
-          animalTypeLabel: item.animalTypeLabel || "",
-          missingLocation: item.missingLocation || "",
-        }))
-      : [];
-
-    // 목격 미리보기
     if (sightingRes && sightingRes.ok) {
-      const sightingRaw = await sightingRes.json();
-      sightingPreview.value = Array.isArray(sightingRaw)
-        ? sightingRaw.map((item) => ({
-            id: item.id,
-            title: item.title || "",
-            thumbnailUrl: item.thumbnailUrl || "",
-            missingLocation: item.missingLocation || item.location || "",
-          }))
-        : [];
+      const raw = await sightingRes.json();
+      sightingPreview.value = raw.map((item) => ({
+        id: item.id,
+        title: item.title,
+        thumbnailUrl: item.thumbnailUrl,
+        createdAt: item.createdAt,
+      }));
     } else {
       sightingPreview.value = [];
     }
-
-    console.log("✅ 홈 데이터 로드 완료:", {
-      adoptionList: adoptionList.value,
-      volunteerList: volunteerList.value,
-      freeList: freeList.value,
-      heroList: heroList.value,
-      noticeList: noticeList.value,
-      missingPreview: missingPreview.value,
-      sightingPreview: sightingPreview.value,
-      isLoggedIn: isLoggedIn.value,
-      userName: userName.value,
-      userTitle: userTitle.value,
-    });
-  } catch (error) {
-    console.error("❌ 홈 데이터 로드 실패:", error);
-    missingPreview.value = [];
-    sightingPreview.value = [];
+  } catch (e) {
+    console.error("❌ 홈 데이터 로드 장애", e);
   }
+}
+
+onMounted(async () => {
+  await fetchMe();
+  await loadHomeData();
 });
 </script>
+
 
 <style scoped>
 /* ========== 공통 폰트/컬러 ========== */

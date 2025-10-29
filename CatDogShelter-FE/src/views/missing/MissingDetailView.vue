@@ -147,7 +147,7 @@
             class="comment-item"
           >
             <div class="comment-meta">
-              <span class="comment-writer">{{ c.userName || '익명' }}</span>
+              <span class="comment-writer">{{ c.userName || '이지윤' }}</span>
               <span class="comment-date">{{ c.createdAt || '' }}</span>
             </div>
             <p class="comment-text">{{ c.text || '' }}</p>

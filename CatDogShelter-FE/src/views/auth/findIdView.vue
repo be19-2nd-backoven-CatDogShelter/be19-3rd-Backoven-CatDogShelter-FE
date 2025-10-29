@@ -44,7 +44,7 @@ const submit = async () => {
 <template>
   <section class="card">
     <header class="head">
-      <img class="logo" src="@/assets/logo.svg" alt="안냥보호센터" />
+      <img class="logo" src="@/assets/logo.svg" alt="댕냥쉼터" />
       <h2>계정 찾기</h2>
       <p class="sub">가입 시 활용한 이메일 주소를 입력해주세요</p>
     </header>

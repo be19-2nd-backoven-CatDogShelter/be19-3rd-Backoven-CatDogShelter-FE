@@ -162,7 +162,14 @@
           <div class="modal-icon">✓</div>
           <h3>입양 게시글 등록 완료</h3>
           <p>게시글이 성공적으로 등록되었습니다!</p>
-          <button class="modal-btn" @click="goToList">입양 게시판으로 이동</button>
+              <div style="display:flex; gap:8px; flex-direction:column">
+                <button class="modal-btn" @click="() => { if (createdPostIdRef.value) { router.push(`/adoption/${createdPostIdRef.value}`) } else { previewPost() } }">게시글 미리보기</button>
+                <button class="modal-btn" @click="goToList">입양 게시판으로 이동</button>
+              </div>
+              <div v-if="lastResponseInfo" style="margin-top:12px; font-size:12px; color:#666;">
+                <div><strong>서버 응답 상태:</strong> {{ lastResponseInfo.status }}</div>
+                <div v-if="lastResponseInfo.text"><strong>응답 본문:</strong> <pre style="white-space:pre-wrap">{{ lastResponseInfo.text }}</pre></div>
+              </div>
         </div>
       </div>
     </Teleport>
@@ -199,7 +206,18 @@ const previews = ref([])
 const isSubmitting = ref(false)
 const errorMessage = ref("")
 const showSuccessModal = ref(false)
+const tempKeyRef = ref(null)
+const createdPostIdRef = ref(null)
+const lastResponseInfo = ref(null)
 const fileInput = ref(null)
+function previewPost() {
+  if (tempKeyRef.value) {
+    router.push({ path: `/adoption/temp`, query: { tempKey: tempKeyRef.value } })
+  } else {
+    // fallback to list
+    router.push('/adoption')
+  }
+}
 
 // ✅ 하드코딩된 지역 데이터 (API가 없을 경우)
 const sidoList = ref([
@@ -384,12 +402,42 @@ async function submitPost() {
       body: formData
     })
 
+    // capture response details for debugging
+    const status = res.status
+    const headers = {}
+    res.headers.forEach((v,k) => headers[k]=v)
+    let text = ''
+    try { text = await res.text() } catch(e){ text = '' }
+
+    // attempt JSON parse
+    let parsed = null
+    try { parsed = text ? JSON.parse(text) : null } catch(e){ parsed = null }
+    lastResponseInfo.value = { status, headers, text, parsed }
+
     if (!res.ok) {
-      const errorText = await res.text()
-      throw new Error(`등록 실패 (${res.status}): ${errorText}`)
+      // show response body in UI for debugging
+      const errorText = text || `HTTP ${status}`
+      throw new Error(`등록 실패 (${status}): ${errorText}`)
     }
 
-    console.log('등록 성공!')
+    console.log('등록 성공!', lastResponseInfo.value)
+
+    // if server returned a created id, store it
+    if (parsed && (parsed.id || parsed.postId || parsed.data?.id)) {
+      createdPostIdRef.value = parsed.id || parsed.postId || parsed.data.id
+    }
+
+    // Create temporary blob URLs for immediate display in the detail page
+    const blobUrls = files.value.map(f => URL.createObjectURL(f))
+    const tempKey = `tempPostFiles_${Date.now()}`
+    try {
+      sessionStorage.setItem(tempKey, JSON.stringify(blobUrls))
+      tempKeyRef.value = tempKey
+    } catch (e) {
+      console.warn('sessionStorage set failed:', e)
+    }
+
+    // Show success modal and let the user navigate (preview or list)
     showSuccessModal.value = true
     
   } catch (error) {

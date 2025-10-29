@@ -14,7 +14,7 @@
             <span class="tag type">{{ post.animalType }}</span>
             <span class="tag">{{ post.breed }}</span>
           </div>
-          <button class="report-btn">📢 게시글 신고</button>
+          <button class="report-btn" @click="reportPost">📢 게시글 신고</button>
         </div>
 
         <h2 class="title">{{ post.title }}</h2>
@@ -241,12 +241,37 @@ const shareUrl = computed(() => {
 });
 
 onMounted(async () => {
+  // If a tempKey is provided (created by the write page), display blob URLs from sessionStorage
+  const tempKey = route.query.tempKey
+  if (tempKey) {
+    try {
+      const raw = sessionStorage.getItem(tempKey)
+      if (raw) {
+        const blobUrls = JSON.parse(raw)
+        post.value = post.value || {}
+        post.value.files = blobUrls.map((u, i) => ({ id: `blob-${i}`, fileUrl: u, __isBlob: true }))
+        comments.value = []
+        likeCount.value = 0
+        // remove the key so it won't be reused
+        sessionStorage.removeItem(tempKey)
+      }
+    } catch (e) {
+      console.warn('failed to load temp images from sessionStorage', e)
+    }
+
+    // Try to resolve server URLs as well — if/when available these will replace blob URLs
+    resolveAllFileUrls()
+    return
+  }
+
   const res = await fetch(`http://localhost:8000/post-service/adoption-post/${route.params.id}`);
   const data = await res.json();
   
   post.value = data;
   comments.value = data.comments || [];
   likeCount.value = data.recommendCount || 0;
+  // Attempt to resolve file URLs for each returned file (pick the first that actually loads)
+  resolveAllFileUrls();
   
   // TODO: 로그인한 사용자가 좋아요를 눌렀는지 확인하는 API 호출
   // isLiked.value = await checkIfLiked(route.params.id);
@@ -261,23 +286,41 @@ async function toggleLike() {
   // }
 
   try {
+    // optimistic update
+    const prevLiked = isLiked.value
+    const prevCount = likeCount.value
     if (isLiked.value) {
-      // 좋아요 취소 API 호출
-      // await fetch(`http://localhost:8000/post-service/adoption-post/${route.params.id}/like`, {
-      //   method: 'DELETE'
-      // });
-      isLiked.value = false;
-      likeCount.value--;
+      isLiked.value = false
+      likeCount.value = Math.max(0, likeCount.value - 1)
     } else {
-      // 좋아요 추가 API 호출
-      // await fetch(`http://localhost:8000/post-service/adoption-post/${route.params.id}/like`, {
-      //   method: 'POST'
-      // });
-      isLiked.value = true;
-      likeCount.value++;
+      isLiked.value = true
+      likeCount.value = likeCount.value + 1
+    }
+
+    // Attempt to persist to backend; controller expects POST /{postId}/liked with body { userId, headId }
+    const userId = sessionStorage.getItem('userId') ? parseInt(sessionStorage.getItem('userId')) : null
+    const headId = sessionStorage.getItem('headId') ? parseInt(sessionStorage.getItem('headId')) : null
+
+    const res = await fetch(`http://localhost:8000/post-service/adoption-post/${route.params.id}/liked`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, headId })
+    })
+
+    if (!res.ok) {
+      // revert optimistic update
+      isLiked.value = prevLiked
+      likeCount.value = prevCount
+      const body = await res.text().catch(() => '')
+      console.warn('좋아요 저장 실패:', res.status, body)
     }
   } catch (error) {
-    console.error('좋아요 처리 중 오류:', error);
+    console.error('좋아요 처리 중 오류:', error)
+    // revert on network error
+    isLiked.value = !isLiked.value
+    // adjust likeCount conservatively
+    if (isLiked.value) likeCount.value++
+    else likeCount.value = Math.max(0, likeCount.value - 1)
   }
 }
 
@@ -320,12 +363,80 @@ function getFileUrl(file) {
   }
 
   // Prefer fileRename if available (uses per-post files endpoint)
+  // If we've previously resolved a working URL for this file, return it
+  const key = file.fileRename || file.storageFileName || file.id || JSON.stringify(file)
+  if (resolvedFileUrls.value[key]) return resolvedFileUrls.value[key]
+
+  // Otherwise, return a reasonable immediate candidate so the <img> can start loading while
+  // async resolution runs (resolveAllFileUrls was called on mount). This keeps behavior
+  // deterministic when server already supplies a valid fileUrl.
   if (file.fileRename) {
     return `http://localhost:8000/post-service/adoption-post/${route.params.id}/files/${file.fileRename}`
   }
 
   // fallback
   return '/no-image.png'
+}
+
+// Try a list of candidate URLs for each file, using an Image() probe to detect the first
+// URL that successfully loads. Stores results in `resolvedFileUrls` keyed by fileRename/storageFileName/id.
+function resolveAllFileUrls() {
+  if (!post.value || !post.value.files || !post.value.files.length) return;
+
+  post.value.files.forEach(file => {
+    const key = file.fileRename || file.storageFileName || file.id || JSON.stringify(file)
+    // If already resolved, skip
+    if (resolvedFileUrls.value[key]) return;
+
+    const candidates = [];
+
+    // if backend provided full URL, prefer it first
+    if (file.fileUrl) {
+      const url = file.fileUrl.startsWith('http') ? file.fileUrl : `http://localhost:8000${file.fileUrl.startsWith('/') ? file.fileUrl : '/' + file.fileUrl}`
+      candidates.push(url)
+    }
+
+    if (file.fileRename) {
+      // Try common variations used across different backend deployments
+      candidates.push(`http://localhost:8000/post-service/adoption-post/image/${file.fileRename}`)
+      candidates.push(`http://localhost:8000/post-service/adoption-post/${route.params.id}/files/${file.fileRename}`)
+      candidates.push(`http://localhost:8000/files/adoption/${file.fileRename}`)
+      // Server controller in this project exposes /adoption-post/... (see controller code)
+      candidates.push(`http://localhost:8000/adoption-post/image/${file.fileRename}`)
+      candidates.push(`http://localhost:8000/adoption-post/${route.params.id}/files/${file.fileRename}`)
+    }
+
+    if (file.storageFileName) {
+      candidates.push(`http://localhost:8000/files/adoption/${file.storageFileName}`)
+    }
+
+    // Try candidates in order, pick the first that loads
+    tryCandidatesSequentially(candidates).then(successUrl => {
+      if (successUrl) resolvedFileUrls.value[key] = successUrl
+    })
+  })
+}
+
+function tryCandidatesSequentially(candidates) {
+  return new Promise(resolve => {
+    if (!candidates || candidates.length === 0) return resolve(null)
+
+    let idx = 0
+
+    function tryOne() {
+      const url = candidates[idx]
+      const img = new Image()
+      img.onload = () => resolve(url)
+      img.onerror = () => {
+        idx++
+        if (idx >= candidates.length) return resolve(null)
+        tryOne()
+      }
+      img.src = url
+    }
+
+    tryOne()
+  })
 }
 
 function formatDate(dateString) {
@@ -369,6 +480,12 @@ async function postComment() {
 function reportComment(comment) {
   const targetId = comment && (comment.id ?? null);
   openReport({ targetType: 'comment', targetId });
+}
+
+// 게시글 신고 버튼 핸들러
+function reportPost() {
+  const targetId = post.value && post.value.id ? post.value.id : route.params.id
+  openReport({ targetType: 'post', targetId })
 }
 </script>
 
